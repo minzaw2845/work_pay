@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Padauk:wght@400;700&display=swap" rel="stylesheet">
-    <!-- HTML2PDF Library (PDF ဒေါင်းလုဒ်လုပ်ရန်) -->
+    <!-- HTML2PDF Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
@@ -22,11 +22,12 @@
             background-color: #f3f4f6;
         }
         .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
+            display: grid !important;
+            grid-template-columns: repeat(7, 1fr) !important;
         }
         .calendar-day {
-            min-height: 46px;
+            min-height: 48px;
+            box-sizing: border-box;
         }
         .app-gradient {
             background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%);
@@ -345,12 +346,19 @@
 
         const monthsNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-        document.addEventListener('DOMContentLoaded', () => {
+        function initApp() {
             updateUserUI();
             renderCalendar();
             calculateSalary();
             renderSavedSlips();
-        });
+        }
+
+        // Direct Execution to prevent missing load event
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
 
         // Share Handlers
         const shareTextContent = "WorkPay App - အလုပ်ချိန်နှင့် လစာတွက်ချက်ပေးသော ဆော့ဖ်ဝဲလ်";
@@ -414,10 +422,8 @@
 
         function updateUserUI() {
             const btnLabel = document.getElementById('headerUserName');
-            if (userProfile.name) {
-                btnLabel.innerText = userProfile.name;
-            } else {
-                btnLabel.innerText = 'Login';
+            if (btnLabel) {
+                btnLabel.innerText = userProfile.name ? userProfile.name : 'Login';
             }
         }
 
@@ -441,7 +447,10 @@
             const endMonth = monthsNames[nextMonthIndex];
             const endYear = nextMonthIndex === 0 ? selectedYear + 1 : selectedYear;
 
-            document.getElementById('monthDisplayTitle').innerText = `${startMonth} 26 - ${endMonth} 25, ${selectedYear}`;
+            const titleElem = document.getElementById('monthDisplayTitle');
+            if (titleElem) {
+                titleElem.innerText = `${startMonth} 26 - ${endMonth} 25, ${selectedYear}`;
+            }
 
             const daysInStartMonth = new Date(selectedYear, selectedMonthIndex + 1, 0).getDate();
             for (let d = 26; d <= daysInStartMonth; d++) {
@@ -506,13 +515,13 @@
         }
 
         function calculateSalary() {
-            const dailyRate = parseFloat(document.getElementById('dailyRateInput').value) || 0;
-            const allowanceRate = parseFloat(document.getElementById('allowanceInput').value) || 0;
-            const otRate = parseFloat(document.getElementById('otRateInput').value) || 0;
-            const foodRate = parseFloat(document.getElementById('foodRateInput').value) || 0;
+            const dailyRate = parseFloat(document.getElementById('dailyRateInput')?.value) || 0;
+            const allowanceRate = parseFloat(document.getElementById('allowanceInput')?.value) || 0;
+            const otRate = parseFloat(document.getElementById('otRateInput')?.value) || 0;
+            const foodRate = parseFloat(document.getElementById('foodRateInput')?.value) || 0;
 
-            const otherBonus = parseFloat(document.getElementById('otherBonusInput').value) || 0;
-            const otherDeduct = parseFloat(document.getElementById('otherDeductInput').value) || 0;
+            const otherBonus = parseFloat(document.getElementById('otherBonusInput')?.value) || 0;
+            const otherDeduct = parseFloat(document.getElementById('otherDeductInput')?.value) || 0;
 
             let totalDailyCount = 0;
             let totalOTCount = 0;
@@ -530,9 +539,9 @@
                 }
             });
 
-            document.getElementById('dailyDaysCount').innerText = totalDailyCount;
-            document.getElementById('otHoursCount').innerText = totalOTCount;
-            document.getElementById('workedDaysCount').innerText = totalDailyCount;
+            if (document.getElementById('dailyDaysCount')) document.getElementById('dailyDaysCount').innerText = totalDailyCount;
+            if (document.getElementById('otHoursCount')) document.getElementById('otHoursCount').innerText = totalOTCount;
+            if (document.getElementById('workedDaysCount')) document.getElementById('workedDaysCount').innerText = totalDailyCount;
 
             const dailyTotal = totalDailyCount * dailyRate;
             const allowanceTotal = totalDailyCount * allowanceRate;
@@ -544,17 +553,17 @@
             
             const netTotal = subtotal - socialSec - foodTotal - otherDeduct;
 
-            document.getElementById('valDailySum').innerText = dailyTotal.toFixed(1);
-            document.getElementById('valAllowanceSum').innerText = allowanceTotal.toFixed(1);
-            document.getElementById('valOTSum').innerText = otTotal.toFixed(1);
-            document.getElementById('valOtherBonusSum').innerText = otherBonus.toFixed(1);
+            if (document.getElementById('valDailySum')) document.getElementById('valDailySum').innerText = dailyTotal.toFixed(1);
+            if (document.getElementById('valAllowanceSum')) document.getElementById('valAllowanceSum').innerText = allowanceTotal.toFixed(1);
+            if (document.getElementById('valOTSum')) document.getElementById('valOTSum').innerText = otTotal.toFixed(1);
+            if (document.getElementById('valOtherBonusSum')) document.getElementById('valOtherBonusSum').innerText = otherBonus.toFixed(1);
             
-            document.getElementById('valSubtotal').innerText = subtotal.toFixed(1);
-            document.getElementById('valSocialSec').innerText = socialSec.toFixed(1);
-            document.getElementById('valFoodSum').innerText = foodTotal.toFixed(1);
-            document.getElementById('valOtherDeductSum').innerText = otherDeduct.toFixed(1);
+            if (document.getElementById('valSubtotal')) document.getElementById('valSubtotal').innerText = subtotal.toFixed(1);
+            if (document.getElementById('valSocialSec')) document.getElementById('valSocialSec').innerText = socialSec.toFixed(1);
+            if (document.getElementById('valFoodSum')) document.getElementById('valFoodSum').innerText = foodTotal.toFixed(1);
+            if (document.getElementById('valOtherDeductSum')) document.getElementById('valOtherDeductSum').innerText = otherDeduct.toFixed(1);
 
-            document.getElementById('valTotalAmount').innerText = netTotal.toFixed(1);
+            if (document.getElementById('valTotalAmount')) document.getElementById('valTotalAmount').innerText = netTotal.toFixed(1);
 
             return { 
                 totalDailyCount, 
@@ -579,7 +588,7 @@
                 return;
             }
 
-            const title = document.getElementById('monthDisplayTitle').innerText;
+            const title = document.getElementById('monthDisplayTitle')?.innerText || '';
             const sal = calculateSalary();
 
             const newSlip = {
@@ -611,6 +620,8 @@
 
         function renderSavedSlips() {
             const container = document.getElementById('savedPayslipsList');
+            if (!container) return;
+
             if (savedSlips.length === 0) {
                 container.innerHTML = `<p class="text-slate-400 text-[11px] text-center py-2">သိမ်းထားသော စလစ် မရှိသေးပါ။</p>`;
                 return;
@@ -661,11 +672,11 @@
 
             const element = document.getElementById('pdfContent');
             const opt = {
-                margin: 10,
-                filename: `Payslip_${slip.user}_${slip.cycleTitle.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2 },
-                jsPDF: { unit: 'mm', format: 'a5', orientation: 'portrait' }
+                margin:       10,
+                filename:     `Payslip_${slip.user}_${slip.cycleTitle.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'mm', format: 'a5', orientation: 'portrait' }
             };
 
             html2pdf().set(opt).from(element).save();
