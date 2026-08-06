@@ -1,334 +1,4 @@
-<!DOCTYPE html>
-<html lang="my">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WorkPay</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Padauk:wght@400;700&display=swap" rel="stylesheet">
-    <!-- HTML2PDF Library (PDF ဒေါင်းလုဒ်လုပ်ရန်) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
-    <style>
-        body {
-            font-family: 'Padauk', 'Inter', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-            background-color: #f3f4f6;
-        }
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-        }
-        .calendar-day {
-            min-height: 46px;
-        }
-        .app-gradient {
-            background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%);
-        }
-    </style>
-</head>
-<body class="bg-slate-100 min-h-screen text-slate-800 flex justify-center">
-
-    <!-- Main Container -->
-    <div class="w-full max-w-md bg-white min-h-screen shadow-xl flex flex-col relative pb-12">
-
-        <!-- Header -->
-        <header class="app-gradient text-white px-4 py-3 shadow-md sticky top-0 z-20 flex items-center justify-between">
-            <div class="flex items-center space-x-2">
-                <div class="w-8 h-8 bg-white/20 backdrop-blur-md rounded-lg flex items-center justify-center border border-white/30">
-                    <i class="fa-solid fa-handshake-simple text-white text-base"></i>
-                </div>
-                <h1 class="text-xl font-bold tracking-wide">WorkPay</h1>
-            </div>
-
-            <!-- Profile & Share Action -->
-            <div class="flex items-center space-x-1.5">
-                <button onclick="shareApp()" class="bg-white/20 hover:bg-white/30 text-white text-[11px] font-semibold px-2 py-1 rounded-md border border-white/30 transition flex items-center gap-1">
-                    <i class="fa-solid fa-share-nodes text-[10px]"></i>
-                    <span>Share</span>
-                </button>
-                <button onclick="openProfileModal()" class="bg-white/20 hover:bg-white/30 text-white text-[11px] font-semibold px-2.5 py-1 rounded-md border border-white/30 transition flex items-center gap-1">
-                    <i class="fa-solid fa-user-circle text-xs"></i>
-                    <span id="headerUserName">Login</span>
-                </button>
-            </div>
-        </header>
-
-        <!-- Scrollable Main Content -->
-        <main class="flex-1 p-3 space-y-3 overflow-y-auto">
-
-            <!-- Month Navigator -->
-            <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 shadow-sm space-y-2">
-                <div class="flex items-center justify-between text-blue-600 font-bold">
-                    <button onclick="changeMonth(-1)" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-blue-50 active:scale-95 transition text-blue-600">
-                        <i class="fa-solid fa-chevron-left text-sm"></i>
-                    </button>
-                    <div class="text-center">
-                        <div id="monthDisplayTitle" class="text-sm font-extrabold text-blue-700">Jul 26 - Aug 25, 2026</div>
-                        <div id="monthSubTitle" class="text-[10px] text-slate-400 font-normal">(ရက်စွဲ ပြောင်းရန် နှိပ်ပါ)</div>
-                    </div>
-                    <button onclick="changeMonth(1)" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-blue-50 active:scale-95 transition text-blue-600">
-                        <i class="fa-solid fa-chevron-right text-sm"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Calendar Section -->
-            <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-                <div class="calendar-grid bg-slate-700 text-white text-center font-bold text-[10px] py-2">
-                    <div class="text-red-400">SUN</div>
-                    <div>MON</div>
-                    <div>TUE</div>
-                    <div>WED</div>
-                    <div>THU</div>
-                    <div>FRI</div>
-                    <div>SAT</div>
-                </div>
-
-                <div id="calendarGrid" class="calendar-grid border-t border-slate-200">
-                    <!-- Calendar Days Rendered Here -->
-                </div>
-            </div>
-
-            <!-- Pay Calculations Table -->
-            <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm text-xs">
-                <div class="bg-slate-800 text-white px-3 py-2 font-bold flex justify-between items-center text-xs">
-                    <span>လစာတွက်ချက်မှု အနှစ်ချုပ်</span>
-                    <span class="text-[10px] font-normal text-slate-300">BHD</span>
-                </div>
-                
-                <div class="divide-y divide-slate-100">
-                    <!-- Daily Rate -->
-                    <div class="flex justify-between items-center p-2.5 hover:bg-slate-50">
-                        <span class="text-slate-600">နေ့စဉ်ကြေး (Daily) (<span id="dailyDaysCount">0</span> ရက်)</span>
-                        <div class="flex items-center gap-1.5">
-                            <input type="number" id="dailyRateInput" value="400.0" oninput="calculateSalary()" class="w-16 text-right border border-slate-300 rounded px-1 py-0.5 text-xs text-slate-700 focus:outline-none focus:border-orange-500">
-                            <span id="valDailySum" class="font-bold text-slate-800 w-12 text-right">0.0</span>
-                        </div>
-                    </div>
-
-                    <!-- Allowance -->
-                    <div class="flex justify-between items-center p-2.5 hover:bg-slate-50">
-                        <span class="text-slate-600">သက်သာချောင်ချိရေး</span>
-                        <div class="flex items-center gap-1.5">
-                            <input type="number" id="allowanceInput" value="90.0" oninput="calculateSalary()" class="w-16 text-right border border-slate-300 rounded px-1 py-0.5 text-xs text-slate-700 focus:outline-none focus:border-orange-500">
-                            <span id="valAllowanceSum" class="font-bold text-slate-800 w-12 text-right">0.0</span>
-                        </div>
-                    </div>
-
-                    <!-- OT -->
-                    <div class="flex justify-between items-center p-2.5 hover:bg-slate-50">
-                        <span class="text-slate-600">OT (အချိန်ပိုကြေး) (<span id="otHoursCount">0</span> နာရီ)</span>
-                        <div class="flex items-center gap-1.5">
-                            <input type="number" id="otRateInput" value="75.0" oninput="calculateSalary()" class="w-16 text-right border border-slate-300 rounded px-1 py-0.5 text-xs text-slate-700 focus:outline-none focus:border-orange-500">
-                            <span id="valOTSum" class="font-bold text-slate-800 w-12 text-right">0.0</span>
-                        </div>
-                    </div>
-
-                    <!-- Other Bonus -->
-                    <div class="flex justify-between items-center p-2.5 hover:bg-slate-50 bg-emerald-50/30">
-                        <span class="text-emerald-700 font-medium">အခြား ရရှိငွေ (ပေါင်းရန်)</span>
-                        <div class="flex items-center gap-1.5">
-                            <input type="number" id="otherBonusInput" value="0.0" oninput="calculateSalary()" class="w-16 text-right border border-emerald-300 rounded px-1 py-0.5 text-xs text-slate-700 focus:outline-none focus:border-emerald-500">
-                            <span id="valOtherBonusSum" class="font-bold text-emerald-600 w-12 text-right">0.0</span>
-                        </div>
-                    </div>
-
-                    <!-- Subtotal -->
-                    <div class="flex justify-between items-center p-2.5 bg-slate-50 font-bold text-slate-900">
-                        <span>စုစုပေါင်း (TOTAL)</span>
-                        <span id="valSubtotal" class="text-sm text-blue-700">0.0</span>
-                    </div>
-
-                    <!-- Social Security -->
-                    <div class="flex justify-between items-center p-2.5 hover:bg-slate-50">
-                        <span class="text-slate-600">လူမှုဖူလုံရေး (4%)</span>
-                        <span id="valSocialSec" class="font-bold text-red-600">0.0</span>
-                    </div>
-
-                    <!-- Travel Allowance -->
-                    <div class="flex justify-between items-center p-2.5 hover:bg-slate-50">
-                        <span class="text-slate-600">ကားခ (<span id="workedDaysCount">0</span> ရက်)</span>
-                        <div class="flex items-center gap-1.5">
-                            <input type="number" id="foodRateInput" value="40.0" oninput="calculateSalary()" class="w-16 text-right border border-slate-300 rounded px-1 py-0.5 text-xs text-slate-700 focus:outline-none focus:border-orange-500">
-                            <span id="valFoodSum" class="font-bold text-slate-800 w-12 text-right">0.0</span>
-                        </div>
-                    </div>
-
-                    <!-- Other Deduction -->
-                    <div class="flex justify-between items-center p-2.5 hover:bg-slate-50 bg-rose-50/30">
-                        <span class="text-rose-700 font-medium">အခြား ဖြတ်တောက်ငွေ (နုတ်ရန်)</span>
-                        <div class="flex items-center gap-1.5">
-                            <input type="number" id="otherDeductInput" value="0.0" oninput="calculateSalary()" class="w-16 text-right border border-rose-300 rounded px-1 py-0.5 text-xs text-slate-700 focus:outline-none focus:border-rose-500">
-                            <span id="valOtherDeductSum" class="font-bold text-rose-600 w-12 text-right">0.0</span>
-                        </div>
-                    </div>
-
-                    <!-- Net Total Amount -->
-                    <div class="flex justify-between items-center p-3 bg-orange-50 text-orange-900 font-extrabold border-t border-orange-200">
-                        <span class="text-xs">ရရှိမည့် စုစုပေါင်းငွေ</span>
-                        <div class="text-right">
-                            <span id="valTotalAmount" class="text-lg text-orange-600">0.0</span>
-                            <span class="text-[10px] font-normal text-slate-500 inline ml-0.5">BHD</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Save Payslip Action Button -->
-            <button onclick="savePayslip()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold rounded-xl shadow-md transition flex items-center justify-center gap-2 text-xs">
-                <i class="fa-solid fa-file-invoice-dollar text-base"></i>
-                <span>ဒီတစ်လစာ လစာစလစ် သိမ်းမည်</span>
-            </button>
-
-            <!-- Saved Payslips History -->
-            <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm space-y-2 text-xs">
-                <div class="font-bold text-slate-800 flex items-center gap-1.5 border-b pb-2">
-                    <i class="fa-solid fa-history text-orange-500"></i>
-                    <span>သိမ်းဆည်းထားသော လစာစလစ်များ</span>
-                </div>
-                <div id="savedPayslipsList" class="space-y-2">
-                    <p class="text-slate-400 text-[11px] text-center py-2">သိမ်းထားသော စလစ် မရှိသေးပါ။</p>
-                </div>
-            </div>
-
-        </main>
-
-        <!-- Share Options Modal -->
-        <div id="shareModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-            <div class="bg-white rounded-xl max-w-xs w-full p-4 shadow-2xl text-center space-y-3">
-                <div class="w-10 h-10 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto text-lg">
-                    <i class="fa-solid fa-share-nodes"></i>
-                </div>
-                <h3 class="text-sm font-bold text-slate-800">WorkPay App မျှဝေရန်</h3>
-                <p class="text-[11px] text-slate-500">အောက်ပါနည်းလမ်းများဖြင့် မျှဝေနိုင်ပါသည်</p>
-
-                <div class="grid grid-cols-2 gap-2 text-xs pt-1">
-                    <button onclick="shareToWhatsApp()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2 px-2 rounded-lg flex items-center justify-center gap-1.5 transition">
-                        <i class="fa-brands fa-whatsapp text-sm"></i>
-                        <span>WhatsApp</span>
-                    </button>
-                    <button onclick="copyAppMessage()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-2 rounded-lg flex items-center justify-center gap-1.5 transition">
-                        <i class="fa-regular fa-copy text-sm"></i>
-                        <span>Copy Text</span>
-                    </button>
-                </div>
-
-                <button onclick="closeShareModal()" class="w-full py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold rounded-lg text-xs mt-2 transition">
-                    ပိတ်မည်
-                </button>
-            </div>
-        </div>
-
-        <!-- User Profile & Login Modal -->
-        <div id="profileModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-            <div class="bg-white rounded-xl max-w-xs w-full p-4 shadow-2xl">
-                <div class="text-center mb-3">
-                    <div class="w-12 h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto mb-2 text-xl">
-                        <i class="fa-solid fa-user-lock"></i>
-                    </div>
-                    <h3 class="text-base font-bold text-slate-800">အသုံးပြုသူ အကောင့်</h3>
-                    <p class="text-[11px] text-slate-500">ဖုန်း သို့မဟုတ် အီးမေးလ်ဖြင့် လော့အင်ဝင်ပါ</p>
-                </div>
-
-                <div class="space-y-2.5 text-xs">
-                    <div>
-                        <label class="block font-semibold text-slate-600 mb-1">အသုံးပြုသူ နာမည် (Name)</label>
-                        <input type="text" id="inputUserName" placeholder="ဥပမာ - မောင်မောင်" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-orange-500">
-                    </div>
-
-                    <div>
-                        <label class="block font-semibold text-slate-600 mb-1">ဖုန်း သို့မဟုတ် အီးမေးလ် (Phone/Email)</label>
-                        <input type="text" id="inputUserContact" placeholder="09... သို့မဟုတ် email@gmail.com" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-orange-500">
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-2 mt-4">
-                    <button onclick="closeProfileModal()" class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold rounded-lg text-xs transition">
-                        ပိတ်မည်
-                    </button>
-                    <button onclick="saveUserProfile()" class="flex-1 py-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg text-xs shadow transition">
-                        သိမ်းမည်
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Day Entry Modal -->
-        <div id="dayModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-            <div class="bg-white rounded-xl max-w-xs w-full p-4 shadow-2xl">
-                <div class="text-center mb-3">
-                    <h3 id="modalDateTitle" class="text-base font-bold text-slate-800">2026-07-27</h3>
-                    <p class="text-[11px] text-slate-500">စာရင်း သွင်းရန်</p>
-                </div>
-
-                <div class="space-y-2 text-xs">
-                    <div>
-                        <label class="block font-semibold text-slate-600 mb-1">Daily (ပုံမှန်အလုပ်ချိန် - ရက်)</label>
-                        <input type="number" id="modalDailyHours" step="0.5" min="0" max="24" placeholder="1" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-orange-500">
-                    </div>
-
-                    <div>
-                        <label class="block font-semibold text-slate-600 mb-1">OT (အချိန်ပို - နာရီ)</label>
-                        <input type="number" id="modalOTHours" step="0.5" min="0" max="24" placeholder="0" class="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-orange-500">
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-2 mt-4">
-                    <button onclick="closeDayModal()" class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold rounded-lg text-xs transition">
-                        မလုပ်တော့ပါ
-                    </button>
-                    <button onclick="saveDayEntry()" class="flex-1 py-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg text-xs shadow transition">
-                        သိမ်းမည်
-                    </button>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- Hidden Printable Slip Container for PDF Generation -->
-    <div id="pdfTemplate" class="hidden">
-        <div id="pdfContent" style="padding: 20px; font-family: sans-serif; color: #1e293b; max-width: 500px; background: #ffffff;">
-            <div style="text-align: center; border-bottom: 2px solid #ff6b35; padding-bottom: 10px; margin-bottom: 15px;">
-                <h2 style="margin: 0; font-size: 20px; color: #ff6b35;">WorkPay - Payslip</h2>
-                <p style="margin: 5px 0 0 0; font-size: 12px; color: #64748b;" id="pdfCycleTitle">Jul 26 - Aug 25, 2026</p>
-            </div>
-
-            <div style="font-size: 12px; margin-bottom: 15px; background: #f8fafc; padding: 10px; border-radius: 6px;">
-                <div style="margin-bottom: 4px;"><strong>ဝန်ထမ်းအမည်:</strong> <span id="pdfUserName">-</span></div>
-                <div><strong>ဖုန်း/အီးမေးလ်:</strong> <span id="pdfUserContact">-</span></div>
-            </div>
-
-            <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 15px;">
-                <thead>
-                    <tr style="background: #f1f5f9; text-align: left;">
-                        <th style="padding: 8px; border: 1px solid #e2e8f0;">အကြောင်းအရာ</th>
-                        <th style="padding: 8px; border: 1px solid #e2e8f0; text-align: right;">ပမာဏ (BHD)</th>
-                    </tr>
-                </thead>
-                <tbody id="pdfTableBody">
-                    <!-- Dynamic details will load here -->
-                </tbody>
-            </table>
-
-            <div style="text-align: right; font-size: 14px; font-weight: bold; color: #ea580c; border-top: 2px dashed #cbd5e1; padding-top: 10px;">
-                ရရှိမည့် စုစုပေါင်းငွေ: <span id="pdfNetTotal">0.0</span> BHD
-            </div>
-            
-            <div style="text-align: center; font-size: 10px; color: #94a3b8; margin-top: 25px;">
-                Generated by WorkPay App
-            </div>
-        </div>
-    </div>
-
-    <!-- Script Logic -->
+<!-- Script Logic -->
     <script>
         let selectedYear = 2026;
         let selectedMonthIndex = 6; 
@@ -337,20 +7,61 @@
         let userProfile = { name: '', contact: '' };
         let activeSelectedDateStr = '';
 
+        // App မစမီ Storage ထဲမှ ဒေတာများ လာရောက်ဖတ်ယူခြင်း
         try {
             workLogs = JSON.parse(localStorage.getItem('workpay_logs') || '{}');
             savedSlips = JSON.parse(localStorage.getItem('workpay_slips') || '[]');
             userProfile = JSON.parse(localStorage.getItem('workpay_user') || '{"name":"","contact":""}');
+            
+            // သိမ်းထားသော လ နှင့် နှစ် အား ဖတ်ယူခြင်း
+            const savedYear = localStorage.getItem('workpay_selectedYear');
+            const savedMonth = localStorage.getItem('workpay_selectedMonth');
+            if (savedYear !== null) selectedYear = parseInt(savedYear);
+            if (savedMonth !== null) selectedMonthIndex = parseInt(savedMonth);
         } catch(e) {}
 
         const monthsNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-        document.addEventListener('DOMContentLoaded', () => {
+        function initApp() {
+            loadSavedInputs(); // သိမ်းထားသော Rates/Bonuses များကို ပြန်ဖြည့်ခြင်း
             updateUserUI();
             renderCalendar();
             calculateSalary();
             renderSavedSlips();
-        });
+        }
+
+        // Direct Execution to prevent missing load event
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
+
+        // Rates များနှင့် အခြား ရ/နုတ် ငွေများကို စက်ထဲသိမ်းဆည်းခြင်း
+        function saveInputsToStorage() {
+            const inputs = {
+                dailyRate: document.getElementById('dailyRateInput')?.value || '',
+                allowance: document.getElementById('allowanceInput')?.value || '',
+                otRate: document.getElementById('otRateInput')?.value || '',
+                foodRate: document.getElementById('foodRateInput')?.value || '',
+                otherBonus: document.getElementById('otherBonusInput')?.value || '',
+                otherDeduct: document.getElementById('otherDeductInput')?.value || ''
+            };
+            localStorage.setItem('workpay_inputs', JSON.stringify(inputs));
+        }
+
+        // စက်ထဲသိမ်းထားသော တန်ဖိုးများကို Input များထဲသို့ ပြန်လည်ဖြည့်သွင်းခြင်း
+        function loadSavedInputs() {
+            try {
+                const saved = JSON.parse(localStorage.getItem('workpay_inputs') || '{}');
+                if (saved.dailyRate !== undefined) document.getElementById('dailyRateInput').value = saved.dailyRate;
+                if (saved.allowance !== undefined) document.getElementById('allowanceInput').value = saved.allowance;
+                if (saved.otRate !== undefined) document.getElementById('otRateInput').value = saved.otRate;
+                if (saved.foodRate !== undefined) document.getElementById('foodRateInput').value = saved.foodRate;
+                if (saved.otherBonus !== undefined) document.getElementById('otherBonusInput').value = saved.otherBonus;
+                if (saved.otherDeduct !== undefined) document.getElementById('otherDeductInput').value = saved.otherDeduct;
+            } catch(e) {}
+        }
 
         // Share Handlers
         const shareTextContent = "WorkPay App - အလုပ်ချိန်နှင့် လစာတွက်ချက်ပေးသော ဆော့ဖ်ဝဲလ်";
@@ -414,10 +125,8 @@
 
         function updateUserUI() {
             const btnLabel = document.getElementById('headerUserName');
-            if (userProfile.name) {
-                btnLabel.innerText = userProfile.name;
-            } else {
-                btnLabel.innerText = 'Login';
+            if (btnLabel) {
+                btnLabel.innerText = userProfile.name ? userProfile.name : 'Login';
             }
         }
 
@@ -430,6 +139,11 @@
                 selectedMonthIndex = 11;
                 selectedYear--;
             }
+
+            // ရွေးချယ်လိုက်သော လ နှင့် နှစ် ကို စက်ထဲသိမ်းဆည်းခြင်း
+            localStorage.setItem('workpay_selectedYear', selectedYear);
+            localStorage.setItem('workpay_selectedMonth', selectedMonthIndex);
+
             renderCalendar();
             calculateSalary();
         }
@@ -441,7 +155,10 @@
             const endMonth = monthsNames[nextMonthIndex];
             const endYear = nextMonthIndex === 0 ? selectedYear + 1 : selectedYear;
 
-            document.getElementById('monthDisplayTitle').innerText = `${startMonth} 26 - ${endMonth} 25, ${selectedYear}`;
+            const titleElem = document.getElementById('monthDisplayTitle');
+            if (titleElem) {
+                titleElem.innerText = `${startMonth} 26 - ${endMonth} 25, ${selectedYear}`;
+            }
 
             const daysInStartMonth = new Date(selectedYear, selectedMonthIndex + 1, 0).getDate();
             for (let d = 26; d <= daysInStartMonth; d++) {
@@ -506,13 +223,16 @@
         }
 
         function calculateSalary() {
-            const dailyRate = parseFloat(document.getElementById('dailyRateInput').value) || 0;
-            const allowanceRate = parseFloat(document.getElementById('allowanceInput').value) || 0;
-            const otRate = parseFloat(document.getElementById('otRateInput').value) || 0;
-            const foodRate = parseFloat(document.getElementById('foodRateInput').value) || 0;
+            // စာရိုက်လိုက်တိုင်း စက်ထဲသို့ တပြိုင်နက်သိမ်းဆည်းခြင်း
+            saveInputsToStorage();
 
-            const otherBonus = parseFloat(document.getElementById('otherBonusInput').value) || 0;
-            const otherDeduct = parseFloat(document.getElementById('otherDeductInput').value) || 0;
+            const dailyRate = parseFloat(document.getElementById('dailyRateInput')?.value) || 0;
+            const allowanceRate = parseFloat(document.getElementById('allowanceInput')?.value) || 0;
+            const otRate = parseFloat(document.getElementById('otRateInput')?.value) || 0;
+            const foodRate = parseFloat(document.getElementById('foodRateInput')?.value) || 0;
+
+            const otherBonus = parseFloat(document.getElementById('otherBonusInput')?.value) || 0;
+            const otherDeduct = parseFloat(document.getElementById('otherDeductInput')?.value) || 0;
 
             let totalDailyCount = 0;
             let totalOTCount = 0;
@@ -530,9 +250,9 @@
                 }
             });
 
-            document.getElementById('dailyDaysCount').innerText = totalDailyCount;
-            document.getElementById('otHoursCount').innerText = totalOTCount;
-            document.getElementById('workedDaysCount').innerText = totalDailyCount;
+            if (document.getElementById('dailyDaysCount')) document.getElementById('dailyDaysCount').innerText = totalDailyCount;
+            if (document.getElementById('otHoursCount')) document.getElementById('otHoursCount').innerText = totalOTCount;
+            if (document.getElementById('workedDaysCount')) document.getElementById('workedDaysCount').innerText = totalDailyCount;
 
             const dailyTotal = totalDailyCount * dailyRate;
             const allowanceTotal = totalDailyCount * allowanceRate;
@@ -544,17 +264,17 @@
             
             const netTotal = subtotal - socialSec - foodTotal - otherDeduct;
 
-            document.getElementById('valDailySum').innerText = dailyTotal.toFixed(1);
-            document.getElementById('valAllowanceSum').innerText = allowanceTotal.toFixed(1);
-            document.getElementById('valOTSum').innerText = otTotal.toFixed(1);
-            document.getElementById('valOtherBonusSum').innerText = otherBonus.toFixed(1);
+            if (document.getElementById('valDailySum')) document.getElementById('valDailySum').innerText = dailyTotal.toFixed(1);
+            if (document.getElementById('valAllowanceSum')) document.getElementById('valAllowanceSum').innerText = allowanceTotal.toFixed(1);
+            if (document.getElementById('valOTSum')) document.getElementById('valOTSum').innerText = otTotal.toFixed(1);
+            if (document.getElementById('valOtherBonusSum')) document.getElementById('valOtherBonusSum').innerText = otherBonus.toFixed(1);
             
-            document.getElementById('valSubtotal').innerText = subtotal.toFixed(1);
-            document.getElementById('valSocialSec').innerText = socialSec.toFixed(1);
-            document.getElementById('valFoodSum').innerText = foodTotal.toFixed(1);
-            document.getElementById('valOtherDeductSum').innerText = otherDeduct.toFixed(1);
+            if (document.getElementById('valSubtotal')) document.getElementById('valSubtotal').innerText = subtotal.toFixed(1);
+            if (document.getElementById('valSocialSec')) document.getElementById('valSocialSec').innerText = socialSec.toFixed(1);
+            if (document.getElementById('valFoodSum')) document.getElementById('valFoodSum').innerText = foodTotal.toFixed(1);
+            if (document.getElementById('valOtherDeductSum')) document.getElementById('valOtherDeductSum').innerText = otherDeduct.toFixed(1);
 
-            document.getElementById('valTotalAmount').innerText = netTotal.toFixed(1);
+            if (document.getElementById('valTotalAmount')) document.getElementById('valTotalAmount').innerText = netTotal.toFixed(1);
 
             return { 
                 totalDailyCount, 
@@ -579,7 +299,7 @@
                 return;
             }
 
-            const title = document.getElementById('monthDisplayTitle').innerText;
+            const title = document.getElementById('monthDisplayTitle')?.innerText || '';
             const sal = calculateSalary();
 
             const newSlip = {
@@ -611,6 +331,8 @@
 
         function renderSavedSlips() {
             const container = document.getElementById('savedPayslipsList');
+            if (!container) return;
+
             if (savedSlips.length === 0) {
                 container.innerHTML = `<p class="text-slate-400 text-[11px] text-center py-2">သိမ်းထားသော စလစ် မရှိသေးပါ။</p>`;
                 return;
@@ -713,6 +435,4 @@
             closeDayModal();
         }
     </script>
-</body>
-</html>
 
